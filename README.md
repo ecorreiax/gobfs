@@ -31,10 +31,10 @@ Create a hash for a specif string and then add this index into the bitset array
 func myFunction() {
   h := sha1.New()
   a := [3]string{"apple", "grape", "mango"}
-	for _, s := range a {
-		idx := hash.CreateHash(h, s)
-		hash.AddHash(idx)
-	}
+  for _, s := range a {
+    idx, _ := hash.CreateHash(h, s)
+    hash.AddHash(idx)
+  }
 }
 ```
 
