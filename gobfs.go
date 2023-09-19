@@ -14,11 +14,6 @@ import (
 // bitset is a boolean array used to store hash indexes.
 var bitset []bool
 
-type CreateHashStruct struct {
-	Idx   int
-	Error error
-}
-
 // CreateHash computes a hash index based on a given string and hash algorithm.
 // It returns a CreateHashStruct containing the hash index and an error, if any.
 // The function uses the given hash.Hash compliant hashing algorithm to hash the input string.
@@ -38,17 +33,15 @@ type CreateHashStruct struct {
 // h := sha256.New()
 // input := "a"
 // result := CreateHash(h, input)
-// if result.Error != nil {
-//     log.Fatalf("Error creating hash: %v", result.Error)
-// }
+//
+//	if result.Error != nil {
+//	    log.Fatalf("Error creating hash: %v", result.Error)
+//	}
+//
 // fmt.Printf("Hash index: %d\n", result.Idx)
-
-func CreateHash(h hash.Hash, s string) CreateHashStruct {
+func CreateHash(h hash.Hash, s string) (int, error) {
 	if len(s) > 1 {
-		return CreateHashStruct{
-			Idx:   0,
-			Error: errors.New("string can't be empty"),
-		}
+		return 0, errors.New("string can't be empty")
 	}
 
 	h.Write([]byte(s))
@@ -56,16 +49,10 @@ func CreateHash(h hash.Hash, s string) CreateHashStruct {
 	buf := bytes.NewBuffer(bits)
 	bufId, err := binary.ReadVarint(buf)
 	if err != nil {
-		return CreateHashStruct{
-			Idx:   0,
-			Error: err,
-		}
+		return 0, err
 	}
 
-	return CreateHashStruct{
-		Idx:   parseIdx(int(bufId)),
-		Error: nil,
-	}
+	return parseIdx(int(bufId)), nil
 }
 
 // AddToHash adds a value into bitset based on the given index.
@@ -81,7 +68,7 @@ func CreateHash(h hash.Hash, s string) CreateHashStruct {
 // Example:
 //
 //	AddHash(42)
-func AddToHash(idx int) {
+func AddToHash(idx int) error {
 	if idx < 0 {
 		idx = -idx
 	}
@@ -92,7 +79,12 @@ func AddToHash(idx int) {
 		bitset = newBitset
 	}
 
+	if !bitset[idx] {
+		return errors.New("couldn't add value to bitset")
+	}
+
 	bitset[idx] = true
+	return nil
 }
 
 // VerifyHash checks if a bit is set at a given index in the global bitset.
